@@ -29,13 +29,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
-import com.oracle.libuv.cb.StreamCloseCallback;
-import com.oracle.libuv.cb.StreamConnectCallback;
-import com.oracle.libuv.cb.StreamConnectionCallback;
-import com.oracle.libuv.cb.StreamRead2Callback;
-import com.oracle.libuv.cb.StreamReadCallback;
-import com.oracle.libuv.cb.StreamShutdownCallback;
-import com.oracle.libuv.cb.StreamWriteCallback;
+import com.oracle.libuv.cb.*;
 
 public class StreamHandle extends Handle {
 
@@ -49,6 +43,7 @@ public class StreamHandle extends Handle {
     private StreamConnectionCallback onConnection = null;
     private StreamCloseCallback onClose = null;
     private StreamShutdownCallback onShutdown = null;
+    private StreamThrowableCallback onThrowable = null;
 
     static {
         _static_initialize();
@@ -80,6 +75,10 @@ public class StreamHandle extends Handle {
 
     public void setShutdownCallback(final StreamShutdownCallback callback) {
         onShutdown = callback;
+    }
+
+    public void setThrowableCallback(final StreamThrowableCallback callback) {
+        onThrowable = callback;
     }
 
     public void readStart() {
@@ -196,43 +195,127 @@ public class StreamHandle extends Handle {
 
     private void callRead(final ByteBuffer data) {
         if (onRead != null) {
-            loop.getCallbackHandler().handleStreamReadCallback(onRead, data);
+            if (onThrowable == null) {
+                loop.getCallbackHandler().handleStreamReadCallback(onRead, data);
+            } else {
+                try {
+                    onRead.onRead(data);
+                } catch (Throwable e) {
+                    if (onThrowable != null) {
+                        onThrowable.onThrowable(e);
+                    } else {
+                        e.printStackTrace();
+                    }
+                }
+            }
         }
     }
 
     private void callRead2(final ByteBuffer data, long handle, int type) {
         if (onRead2 != null) {
-            loop.getCallbackHandler().handleStreamRead2Callback(onRead2, data, handle, type);
+            if (onThrowable == null) {
+                loop.getCallbackHandler().handleStreamRead2Callback(onRead2, data, handle, type);
+            } else {
+                try {
+                    onRead2.onRead2(data, handle, type);
+                } catch (Throwable e) {
+                    if (onThrowable != null) {
+                        onThrowable.onThrowable(e);
+                    } else {
+                        e.printStackTrace();
+                    }
+                }
+            }
         }
     }
 
     private void callWrite(final int status, final Exception error, final Object context) {
         if (onWrite != null) {
-            loop.getCallbackHandler(context).handleStreamWriteCallback(onWrite, status, error);
+            if (onThrowable == null) {
+                loop.getCallbackHandler(context).handleStreamWriteCallback(onWrite, status, error);
+            } else {
+                try {
+                    onWrite.onWrite(status, error);
+                } catch (Throwable e) {
+                    if (onThrowable != null) {
+                        onThrowable.onThrowable(e);
+                    } else {
+                        e.printStackTrace();
+                    }
+                }
+            }
         }
     }
 
     private void callConnect(final int status, final Exception error, final Object context) {
         if (onConnect != null) {
-            loop.getCallbackHandler(context).handleStreamConnectCallback(onConnect, status, error);
+            if (onThrowable == null) {
+                loop.getCallbackHandler(context).handleStreamConnectCallback(onConnect, status, error);
+            } else {
+                try {
+                    onConnect.onConnect(status, error);
+                } catch (Throwable e) {
+                    if (onThrowable != null) {
+                        onThrowable.onThrowable(e);
+                    } else {
+                        e.printStackTrace();
+                    }
+                }
+            }
         }
     }
 
     private void callConnection(final int status, final Exception error) {
         if (onConnection != null) {
-            loop.getCallbackHandler().handleStreamConnectionCallback(onConnection, status, error);
+            if (onThrowable == null) {
+                loop.getCallbackHandler().handleStreamConnectionCallback(onConnection, status, error);
+            } else {
+                try {
+                    onConnection.onConnection(status, error);
+                } catch (Throwable e) {
+                    if (onThrowable != null) {
+                        onThrowable.onThrowable(e);
+                    } else {
+                        e.printStackTrace();
+                    }
+                }
+            }
         }
     }
 
     private void callClose() {
         if (onClose != null) {
-            loop.getCallbackHandler().handleStreamCloseCallback(onClose);
+            if (onThrowable == null) {
+                loop.getCallbackHandler().handleStreamCloseCallback(onClose);
+            } else {
+                try {
+                    onClose.onClose();
+                } catch (Throwable e) {
+                    if (onThrowable != null) {
+                        onThrowable.onThrowable(e);
+                    } else {
+                        e.printStackTrace();
+                    }
+                }
+            }
         }
     }
 
     private void callShutdown(final int status, final Exception error, final Object context) {
         if (onShutdown != null) {
-            loop.getCallbackHandler(context).handleStreamShutdownCallback(onShutdown, status, error);
+            if (onThrowable == null) {
+                loop.getCallbackHandler(context).handleStreamShutdownCallback(onShutdown, status, error);
+            } else {
+                try {
+                    onShutdown.onShutdown(status, error);
+                } catch (Throwable e) {
+                    if (onThrowable != null) {
+                        onThrowable.onThrowable(e);
+                    } else {
+                        e.printStackTrace();
+                    }
+                }
+            }
         }
     }
 

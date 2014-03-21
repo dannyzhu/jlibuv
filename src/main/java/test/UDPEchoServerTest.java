@@ -9,7 +9,7 @@ import com.oracle.libuv.*;
 import com.oracle.libuv.cb.*;
 import com.oracle.libuv.handles.*;
 
-public class UDPServerTest {
+public class UDPEchoServerTest {
     public void start() throws Throwable {
         final AtomicInteger clientSendCount = new AtomicInteger(0);
         final AtomicInteger serverRecvCount = new AtomicInteger(0);
@@ -33,6 +33,13 @@ public class UDPServerTest {
             }
         });
 
+        server.setThrowableCallback(new UDPThrowableCallback() {
+            @Override
+            public void onThrowable(Throwable e) {
+                e.printStackTrace();
+            }
+        });
+
         server.bind(3333, "0.0.0.0");
         server.recvStart();
 
@@ -42,7 +49,7 @@ public class UDPServerTest {
 
     public static void main(String[] args) throws Throwable {
         System.out.println("libuv version : " + LibUV.version());
-        UDPServerTest test = new UDPServerTest();
+        UDPEchoServerTest test = new UDPEchoServerTest();
         test.start();
     }
 }

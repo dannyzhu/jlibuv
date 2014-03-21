@@ -1,45 +1,27 @@
-jlibuv 
-======
+package test;
 
-libuv for java
+import com.oracle.libuv.Address;
+import com.oracle.libuv.LibUV;
+import com.oracle.libuv.cb.*;
+import com.oracle.libuv.handles.LoopHandle;
+import com.oracle.libuv.handles.StreamHandle;
+import com.oracle.libuv.handles.TCPHandle;
+import com.oracle.libuv.handles.UDPHandle;
 
-#### Examples: UDP Echo Server ####
----
-```Java
+import java.nio.ByteBuffer;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
-        final LoopHandle loop = new LoopHandle();
-        final UDPHandle server = new UDPHandle(loop);
+/**
+ * Created by Danny on 14-03-21.
+ */
+public class TCPEchoServerTest {
+    public void start() throws Throwable {
+        final AtomicInteger clientSendCount = new AtomicInteger(0);
+        final AtomicInteger serverRecvCount = new AtomicInteger(0);
 
-        server.setRecvCallback(new UDPRecvCallback() {
-            @Override
-            public void onRecv(int nread, ByteBuffer data, Address address) throws Exception {
-                server.send(data, address.getPort(), address.getIp());
-            }
-        });
-
-        server.setSendCallback(new UDPSendCallback() {
-            @Override
-            public void onSend(int status, Exception error) throws Exception {
-            }
-        });
-
-        server.setThrowableCallback(new UDPThrowableCallback() {
-            @Override
-            public void onThrowable(Throwable e) {
-                e.printStackTrace();
-            }
-        });
-
-        server.bind(3333, "0.0.0.0");
-        server.recvStart();
-
-        loop.run();
-
-```
-
-#### Examples: TCP Echo Server ####
----
-```Java
+        final AtomicBoolean serverDone = new AtomicBoolean(false);
+        final AtomicBoolean clientDone = new AtomicBoolean(false);
 
         final LoopHandle loop = new LoopHandle();
         final TCPHandle server = new TCPHandle(loop);
@@ -106,4 +88,12 @@ libuv for java
 
         loop.run();
 
-```
+    }
+
+    public static void main(String[] args) throws Throwable {
+        System.out.println("libuv version : " + LibUV.version());
+        TCPEchoServerTest test = new TCPEchoServerTest();
+        test.start();
+    }
+
+}

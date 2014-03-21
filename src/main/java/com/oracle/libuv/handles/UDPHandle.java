@@ -34,6 +34,7 @@ import com.oracle.libuv.LibUVPermission;
 import com.oracle.libuv.cb.UDPCloseCallback;
 import com.oracle.libuv.cb.UDPRecvCallback;
 import com.oracle.libuv.cb.UDPSendCallback;
+import com.oracle.libuv.cb.UDPThrowableCallback;
 
 public final class UDPHandle extends Handle {
 
@@ -42,6 +43,7 @@ public final class UDPHandle extends Handle {
     private UDPRecvCallback onRecv = null;
     private UDPSendCallback onSend = null;
     private UDPCloseCallback onClose = null;
+    private UDPThrowableCallback onThrowable = null;
 
     public enum Membership {
         // must be equal to uv_membership values in uv.h
@@ -71,6 +73,9 @@ public final class UDPHandle extends Handle {
         onClose = callback;
     }
 
+    public void setThrowableCallback(final UDPThrowableCallback callback) {
+        onThrowable = callback;
+    }
     public UDPHandle(final LoopHandle loop) {
         super(_new(loop.pointer()), loop);
         this.closed = false;
@@ -242,19 +247,43 @@ public final class UDPHandle extends Handle {
 
     private void callRecv(final int nread, final ByteBuffer data, final Address address) {
         if (onRecv != null) {
-            loop.getCallbackHandler().handleUDPRecvCallback(onRecv, nread, data, address);
+            if (onThrowable == null){
+                loop.getCallbackHandler().handleUDPRecvCallback(onRecv, nread, data, address);
+            }else{
+                try {
+                    onRecv.onRecv(nread, data, address);
+                } catch (Throwable e) {
+                    onThrowable.onThrowable(e);
+                }
+            }
         }
     }
 
     private void callSend(final int status, final Exception error, final Object context) {
         if (onSend != null) {
-            loop.getCallbackHandler(context).handleUDPSendCallback(onSend, status, error);
+            if (onThrowable == null){
+                loop.getCallbackHandler(context).handleUDPSendCallback(onSend, status, error);
+            }else{
+                try {
+                    onSend.onSend(status, error);
+                } catch (Throwable e) {
+                    onThrowable.onThrowable(e);
+                }
+            }
         }
     }
 
     private void callClose() {
         if (onClose != null) {
-            loop.getCallbackHandler().handleUDPCloseCallback(onClose);
+            if (onThrowable == null){
+                loop.getCallbackHandler().handleUDPCloseCallback(onClose);
+            }else{
+                try {
+                    onClose.onClose();
+                } catch (Throwable e) {
+                    onThrowable.onThrowable(e);
+                }
+            }
         }
     }
 
