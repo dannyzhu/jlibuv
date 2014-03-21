@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<project name="jlibuv" default="compile" basedir=".">
+
+	<property name="project.fullname" value="jlibuv" />
+	<property name="project.name" value="jlibuv" />
+	<property name="project.encoding" value="UTF-8" />
+	<property name="project.version" value="0.11.22" />
+
+	<!-- Source locations for the build  -->
+
+	<property name="java.src.dir" value="src/main/java" />
+	<property name="resources.src.dir" value="src/main/resources" />
+
+	<property name="lib.dir" value="lib" />
+
+	<property name="build.dest.dir" value="out/bin" />
+
+	<property name="javadocs.destdir" value="docs/api" />
+    <property name="java.html.dir" value="docs/src" />
+	<property name="year" value="2013" />
+	<property name="locale.default" value="en" />
+	<property name="debug" value="on" />
+	<property name="optimize" value="off" />
+	<property name="deprecation" value="off" />
+
+	<!-- =================================================================== -->
+	<!-- Initializes the build.                                              -->
+	<!-- =================================================================== -->
+	<target name="init">
+
+		<!-- So that we can use the ${TSTAMP}, ${DSTAMP}, ... time stamps
+             in targets, if need be -->
+		<tstamp />
+
+		<echo message="---------- ${project.fullname} ${project.version} ----------" />
+		<echo message="" />
+		<echo message="Notice: Need use jdk1.7 build" />
+		<echo message="" />
+
+		<echo message="java.class.path = ${java.class.path}" />
+		<echo message="" />
+		<echo message="java.home = ${java.home}" />
+		<echo message="ant.home = ${ant.home}" />
+		<echo message="user.home = ${user.home}" />
+		<echo message="" />
+		<echo message="basedir = ${basedir}" />
+		<echo message="" />
+		<echo message="build.compiler = ${build.compiler}" />
+		<echo message="locale.default = ${locale.default}" />
+
+	</target>
+
+	<!-- =================================================================== -->
+	<!-- Builds Classpath                                                    -->
+	<!-- =================================================================== -->
+	<path id="classpath">
+		<fileset dir="${lib.dir}">
+			<include name="*.jar" />
+		</fileset>
+	</path>
+
+	<!-- =================================================================== -->
+	<!-- Compiles the class files                                            -->
+	<!-- =================================================================== -->
+	<target name="compile" description="Compiles the class files" depends="init">
+		<mkdir dir="${build.dest.dir}"/>
+		<javac classpathref="classpath" 
+			srcdir="${java.src.dir}" 
+			destdir="${build.dest.dir}" 
+			debug="${debug}" 
+			deprecation="${deprecation}" 
+			optimize="${optimize}" 
+			source="1.5"
+			target="1.5"
+			encoding="${project.encoding}"
+			includeAntRuntime="false" >
+		</javac>
+
+		<copy todir="${build.dest.dir}">
+			<fileset dir="${java.src.dir}">
+				<include name="**/*.xml" />
+				<include name="**/*.properties" />
+			</fileset>
+		</copy>
+
+        <copy todir="${build.dest.dir}">
+            <fileset dir="${resources.src.dir}">
+                <include name="**/*.xml" />
+                <include name="**/*.properties" />
+            </fileset>
+        </copy>
+	</target>
+
+	<!-- =================================================================== -->
+	<!-- Creates the jar file                                               -->
+	<!-- =================================================================== -->
+	<target name="jar" depends="compile" description="Creates the jar file">
+		<jar jarfile="${basedir}/${project.name}-${project.version}.jar" basedir="${build.dest.dir}">
+			<exclude name="**/test/*.class" />
+			<exclude name="log4j2.xml" />
+		</jar>
+	</target>
+
+
+	<!-- =================================================================== -->
+	<!-- Generates the project's API documentation                           -->
+	<!-- =================================================================== -->
+	<target name="javadocs" depends="jar" description="Generates the project's API documentation">
+		<mkdir dir="${javadocs.destdir}" />
+		<javadoc sourcepath="${java.src.dir}" 
+			packagenames="com.*" 
+			destdir="${javadocs.destdir}" 
+			author="true" private="false" 
+			version="true" use="true" 
+			windowtitle="${project.fullname} API" 
+			doctitle="${project.fullname}" 
+			encoding="${project.encoding}"
+			charset="${project.encoding}"
+			docencoding="${project.encoding}"
+			bottom="Copyright &#169; ${year} hw  . All Rights Reserved.">
+			<classpath refid="classpath" />
+		</javadoc>
+	</target>
+
+
+	<!-- =================================================================== -->
+	<!-- Cleans up the distribution                                          -->
+	<!-- =================================================================== -->
+	<target name="clean" description="Cleans up the distribution">
+		<delete quiet="true">
+			<fileset dir="${build.dest.dir}" />
+		</delete>
+	</target>
+
+
+	<!-- =================================================================== -->
+	<!-- create war                                                          -->
+	<!-- =================================================================== -->
+    <target name="war" depends="jar"
+            description="WAR">
+
+    	<copy todir="${web.classes.dir}">
+			<fileset dir="${resources.src.dir}">
+				<include name="**/*.xml" />
+				<include name="**/*.properties" />
+			</fileset>
+		</copy>
+
+        <copy file="${basedir}/${project.name}-${project.version}.jar" todir="${web.dir}/WEB-INF/lib" overwrite="yes"/>
+
+        <war destfile="${basedir}/${project.name}.war"
+             webxml="${web.dir}/WEB-INF/web.xml" compress="true">
+            <fileset dir="${web.dir}" includes="**/*.*" excludes="**/web.xml"/>
+        </war>
+    </target>
+
+    <target name="war2"
+            description="WAR">
+
+        <copy todir="${web.classes.dir}">
+                        <fileset dir="${resources.src.dir}">
+                                <include name="**/*.xml" />
+                                <include name="**/*.properties" />
+                        </fileset>
+                </copy>
+
+        <echo message="include theme '${themes.name}'" />
+        <war destfile="${basedir}/${project.name}.war"
+             webxml="${web.dir}/WEB-INF/web.xml" compress="true">
+            <fileset dir="${web.dir}">
+		<include name="**/*.*" />				
+                <exclude name="**/web.xml" />
+                <exclude name="**/lib/*.jar" />
+				<include name="**/themes/${themes.name}/**" />				
+            </fileset>
+        </war>
+    </target>
+
+
+    <!--
+    <taskdef name="java2html"
+        classname="de.java2html.anttasks.Java2HtmlTask"
+	    classpath="${classpath}"
+	/>
+	
+	<java2html
+	    srcdir="${java.src.dir}"
+	    destdir="${java.html.dir}"
+	    includes="**/*.java"
+		tabs="4"
+	    style="eclipse"
+	    showLineNumbers="true"
+	    showFileName="true"
+		showDefaultTitle="true"
+	    showTableBorder="true"
+		includeDocumentHeader="true"
+		includeDocumentFooter="true"
+		addLineAnchors="true"
+		horizontalAlignment="left"
+		useShortFileName="false"
+		overwrite="true"
+	/>
+    -->
+</project>
+
