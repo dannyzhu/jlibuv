@@ -25,6 +25,7 @@
 
 package com.oracle.libuv.handles;
 
+import com.oracle.libuv.LibUV;
 import com.oracle.libuv.LibUVPermission;
 import com.oracle.libuv.NativeException;
 
@@ -36,6 +37,7 @@ import com.oracle.libuv.cb.CallbackHandlerFactory;
 public final class LoopHandle {
 
     static {
+        LibUV.version();
         NativeException.static_initialize();
         _static_initialize();
     }

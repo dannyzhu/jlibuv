@@ -3,7 +3,7 @@ jlibuv
 
 libuv for java
 
-#### Examples: UDP Echo Server ####
+#### Examples: UDP Echo Server
 ---
 ```Java
 
@@ -37,7 +37,7 @@ libuv for java
 
 ```
 
-#### Examples: TCP Echo Server ####
+#### Examples: TCP Echo Server
 ---
 ```Java
 
@@ -103,6 +103,43 @@ libuv for java
 
         server.bind("0.0.0.0", 3333);
         server.listen(0);
+
+        loop.run();
+
+```
+
+#### Examples: TCP Echo Client
+---
+```Java
+
+        final LoopHandle loop = new LoopHandle();
+        final TCPHandle client = new TCPHandle(loop);
+
+        client.setConnectCallback(new StreamConnectCallback() {
+            @Override
+            public void onConnect(int status, Exception error) throws Exception {
+                System.out.println("on connect");
+                client.readStart();
+                client.write(ByteBuffer.wrap("okok".getBytes()));
+            }
+        });
+
+        client.setCloseCallback(new StreamCloseCallback() {
+            @Override
+            public void onClose() throws Exception {
+                System.out.println("on close");
+            }
+        });
+
+        client.setReadCallback(new StreamReadCallback() {
+            @Override
+            public void onRead(ByteBuffer data) throws Exception {
+                System.out.println("on read : " + data);
+                client.write(data);
+            }
+        });
+
+        client.connect("127.0.0.1", 3333);
 
         loop.run();
 

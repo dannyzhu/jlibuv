@@ -15,8 +15,6 @@ import java.nio.ByteBuffer;
 public class TCPClientTest {
     public static void main(String[] args) throws Throwable {
 
-        LibUV.version();
-
         final LoopHandle loop = new LoopHandle();
         final TCPHandle client = new TCPHandle(loop);
 

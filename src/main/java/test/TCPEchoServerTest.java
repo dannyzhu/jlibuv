@@ -86,7 +86,7 @@ public class TCPEchoServerTest {
     }
 
     public static void main(String[] args) throws Throwable {
-        System.out.println("libuv version : " + LibUV.version());
+        System.out.println("start tcp echo server.");
         TCPEchoServerTest test = new TCPEchoServerTest();
         test.start();
     }
