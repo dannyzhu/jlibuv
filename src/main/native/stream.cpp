@@ -255,11 +255,26 @@ static void _alloc_cb(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf)
   //uv_buf_init(new char[suggested_size], static_cast<unsigned int>(suggested_size));
 }
 
+static void _close_cb(uv_handle_t* handle) {
+  assert(handle);
+  assert(handle->data);
+  StreamCallbacks* cb = reinterpret_cast<StreamCallbacks*>(handle->data);
+  cb->on_close();
+  delete cb;
+  delete handle;
+}
+
 static void _read_cb(uv_stream_t* stream, ssize_t nread, const uv_buf_t* buf) {
   StreamCallbacks* cb = reinterpret_cast<StreamCallbacks*>(stream->data);
   assert(cb);
-  jsize size = static_cast<jsize>(nread);
-  cb->on_read((uv_buf_t*)buf, size);
+  if (nread < 0){
+    uv_handle_t* handle = reinterpret_cast<uv_handle_t*>(stream);
+    uv_close(handle, _close_cb);
+    delete[] buf->base;
+  }else{
+    jsize size = static_cast<jsize>(nread);
+    cb->on_read((uv_buf_t*)buf, size);
+  }
 }
 
 static void _shutdown_cb(uv_shutdown_t* req, int status) {
@@ -272,15 +287,6 @@ static void _shutdown_cb(uv_shutdown_t* req, int status) {
   cb->on_shutdown(status, status, req_data->context());
   delete req_data;
   delete req;
-}
-
-static void _close_cb(uv_handle_t* handle) {
-  assert(handle);
-  assert(handle->data);
-  StreamCallbacks* cb = reinterpret_cast<StreamCallbacks*>(handle->data);
-  cb->on_close();
-  delete cb;
-  delete handle;
 }
 
 static void _read2_cb(uv_pipe_t* pipe, ssize_t nread, const uv_buf_t* buf, uv_handle_type pending) {

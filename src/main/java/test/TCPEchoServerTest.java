@@ -37,18 +37,10 @@ public class TCPEchoServerTest {
             @Override
             public void onConnection(int status, Exception error) throws Exception {
                 final TCPHandle peer = new TCPHandle(loop);
-                server.accept(peer);
-                System.out.println("peer connect from address : " + peer.getPeerName());
-                peer.readStart();
                 peer.setReadCallback(new StreamReadCallback() {
                     @Override
                     public void onRead(ByteBuffer data) throws Exception {
-                        if (data != null && data.limit() > 0)
-                        {
-                            peer.write(data);
-                        }else{
-                            peer.close();
-                        }
+                        peer.write(data);
                     }
                 });
 
@@ -73,6 +65,9 @@ public class TCPEchoServerTest {
                     }
                 });
 
+                server.accept(peer);
+                System.out.println("peer connect from address : " + peer.getPeerName());
+                peer.readStart();
             }
         });
 
